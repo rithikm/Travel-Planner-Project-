@@ -1,0 +1,84 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Crew AI Travel Planner</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h1>Crew AI Travel Planner</h1>
+    <p>Get a personalized travel plan from the Crew AI Travel Planner!</p>
+
+    <form id="travel-form">
+      <label>Desired Destination:</label>
+      <input type="text" name="destination" placeholder="e.g., Bali" required>
+
+      <label>Budget:</label>
+      <select name="budget">
+        <option>Low</option>
+        <option>Moderate</option>
+        <option>High</option>
+      </select>
+
+      <label>Interests:</label>
+      <input type="text" name="interests" placeholder="e.g., snorkeling, culture" required>
+
+      <label>Preferred Time of Year:</label>
+      <select name="time_of_year">
+        <option>Spring</option>
+        <option>Summer</option>
+        <option>Autumn</option>
+        <option>Winter</option>
+      </select>
+
+      <button type="submit">Plan My Trip</button>
+    </form>
+
+    <div id="loading" style="display: none;">⏳ Generating your travel plan...</div>
+
+    <div id="results"></div>
+  </div>
+
+  <script>
+    const form = document.getElementById("travel-form");
+    const loading = document.getElementById("loading");
+    const results = document.getElementById("results");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      loading.style.display = "block";
+      results.innerHTML = "";
+
+      const formData = new FormData(form);
+      const response = await fetch("/travel_planner", {
+        method: "POST",
+        body: formData
+      });
+
+      const data = await response.json();
+      loading.style.display = "none";
+
+      if (data.error) {
+        results.innerHTML = `<p class="error">❌ ${data.error}</p>`;
+      } else {
+        // Convert Markdown → HTML using marked.js
+        results.innerHTML = `
+          <h2>🌴 Destination Recommendations</h2>
+          <div>${marked.parse(data.destination_recommendation)}</div>
+
+          <h2>🗓️ Itinerary</h2>
+          <div>${marked.parse(data.itinerary)}</div>
+
+          <h2>💰 Budget & Tips</h2>
+          <div>${marked.parse(data.budget_tips)}</div>
+        `;
+      }
+    });
+  </script>
+</body>
+</html>
